@@ -1,0 +1,12 @@
+# Stale agent instructions moved from agent_instructions.yaml
+# These agents are no longer used in Phase 1 (no merging of multiple detections)
+
+ocr_detection_agent:
+  name: OCRDetectionAgent
+  description: Performs OCR text detection to identify Azure resources from naming patterns
+  # ... (full content from lines 248-551 of agent_instructions.yaml)
+
+detection_merger_agent:
+  name: DetectionMergerAgent
+  description: Merges icon detections and OCR detections, deduplicates, and resolves conflicts  
+  # ... (full content from lines 552-747 of agent_instructions.yaml)

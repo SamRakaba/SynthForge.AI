@@ -1,0 +1,202 @@
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé SynthForge.AI                       Γöé
+Γöé Azure Architecture Diagram Analyzer Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+Phase 1: Design Extraction & Requirements Gathering
+7-Stage Multi-Agent Pipeline for Azure architecture analysis
+
+  0.  Description     -> Pre-analysis for component context (optional)
+  1a. Vision Agent    -> Detect Azure icons from diagram (GPT-4o Vision)
+  1b. OCR Agent       -> Extract text & CAF naming patterns (parallel)
+  1c. Detection Merge -> Deduplicate & combine detections
+  2.  Filter Agent    -> Classify resources as architectural/non-architectural
+  3.  Interactive     -> User review and correction of detections
+  4.  Network Flow    -> Analyze connections, VNets, and data flows
+  5.  Security Agent  -> Generate RBAC, PE, and MI recommendations
+  6.  Build Analysis  -> Generate IaC-ready JSON outputs
+
+Phase 2: IaC Code Generation (Coming Soon)
+
+
+Checking Azure authentication...
+Γ£ô Azure authentication valid
+
+Analyzing: input\Architecture_DataFlow_v1.png
+  ΓÇó Interactive review: skipped (--no-interactive)
+
+
+Γû╢ Stage 0/6: Architecture Description
+  -> Stage 0: Describing architecture (provides context for detection)...
+[01/02/26 13:01:55] INFO     Describing architecture   description_agent.py:420
+                             diagram...                                        
+[01/02/26 13:02:07] INFO     Description identified 17 description_agent.py:535
+                             components                                        
+                    INFO     Description phase identified 17    workflow.py:268
+                             components                                        
+  -> Stage 0: 17 components identified
+  Γ£ô Architecture Description completed
+
+Γû╢ Stage 1a+1b/6: Vision + OCR
+  -> 1a. Vision Agent + 1b. OCR Agent running in parallel...
+[01/02/26 13:02:58] INFO     Extracting text with Azure AI   ocr_service.py:174
+                             Vision (Image Analysis 4.0 REST                   
+                             API)...                                           
+[01/02/26 13:03:14] INFO     Azure AI Vision extracted 260   ocr_service.py:273
+                             text elements                                     
+                    INFO     Pre-extracted 260 text  ocr_detection_agent.py:269
+                             elements using                                    
+                             computer_vision                                   
+  -> 1a. Vision: 17 icons | 1b. OCR: 6 text-based resources
+  Γ£ô Vision + OCR completed
+
+Γû╢ Stage 1c/6: Detection Merge
+  -> 1c. Merging Vision and OCR detections...
+[01/02/26 13:03:57] INFO     Deduplication: Removed 4           workflow.py:793
+                             duplicate(s)                                      
+                    INFO     Merge result: 17 vision + 1        workflow.py:795
+                             OCR-only = 14 total (after dedup)                 
+                    INFO                                        workflow.py:227
+                             ----------------------------------                
+                             --------------------------                        
+                    INFO     STAGE: AFTER MERGE (Stage 2) - 14  workflow.py:228
+                             resources                                         
+                    INFO     ---------------------------------- workflow.py:229
+                             --------------------------                        
+                    INFO       1. Azure Data Factory (Managed   workflow.py:234
+                             IR) - conf: 0.95                                  
+                    INFO       2. Azure Synapse Analytics       workflow.py:234
+                             (Spark Pools) - conf: 0.95                        
+                    INFO       3. Azure Machine Learning        workflow.py:234
+                             Workspace - conf: 0.95                            
+                    INFO       4. Azure API Management - conf:  workflow.py:234
+                             0.95                                              
+                    INFO       5. Azure AI Search - conf: 0.95  workflow.py:234
+                    INFO       6. Azure OpenAI Service - conf:  workflow.py:234
+                             0.95                                              
+                    INFO       7. Azure Event Hub - conf: 0.95  workflow.py:234
+                    INFO       8. Azure Storage Account (ADLS)  workflow.py:234
+                             - conf: 0.95                                      
+                    INFO       9. Azure Key Vault - conf: 0.95  workflow.py:234
+                    INFO       10. Azure Container Registry -   workflow.py:234
+                             conf: 0.95                                        
+                    INFO       11. Azure Functions              workflow.py:234
+                             (Orchestrator Instance) - conf:                   
+                             0.95                                              
+                    INFO       12. App Service Plans            workflow.py:234
+                             (Orchestrator Instance) - conf:                   
+                             0.95                                              
+                    INFO       13. Subnet (API Management       workflow.py:234
+                             Integration Subnet) - conf: 0.95                  
+                    INFO       14. Azure Synapse Analytics      workflow.py:234
+                             (Synapse Spark pools) - conf: 0.9                 
+                    INFO     ---------------------------------- workflow.py:235
+                             --------------------------                        
+                                                                               
+  -> 1c. Merged: 14 unique resources detected
+  Γ£ô Detection Merge completed
+
+Γû╢ Stage 2/6: Resource Classification
+  -> Stage 2: Classifying detected resources...
+[01/02/26 13:04:20] INFO     Identified 1 network isolation     workflow.py:356
+                             patterns (will become                             
+                             recommendations)                                  
+  -> Stage 2: 13 Azure resources, 0 need clarification, 1 network patterns
+                    INFO     Filtered 13 architectural from 14  workflow.py:372
+                             total                                             
+                    INFO                                        workflow.py:227
+                             ----------------------------------                
+                             --------------------------                        
+                    INFO     STAGE: AFTER CLASSIFICATION (Stage workflow.py:228
+                             2) - Architectural - 13 resources                 
+                    INFO     ---------------------------------- workflow.py:229
+                             --------------------------                        
+                    INFO       1. Azure Data Factory (Managed   workflow.py:234
+                             IR) - conf: 0.95                                  
+                    INFO       2. Azure Synapse Analytics       workflow.py:234
+                             (Spark Pools) - conf: 0.95                        
+                    INFO       3. Azure Machine Learning        workflow.py:234
+                             Workspace - conf: 0.95                            
+                    INFO       4. Azure API Management - conf:  workflow.py:234
+                             0.95                                              
+                    INFO       5. Azure AI Search - conf: 0.95  workflow.py:234
+                    INFO       6. Azure OpenAI Service - conf:  workflow.py:234
+                             0.95                                              
+                    INFO       7. Azure Event Hub - conf: 0.95  workflow.py:234
+                    INFO       8. Azure Storage Account (ADLS)  workflow.py:234
+                             - conf: 0.95                                      
+                    INFO       9. Azure Key Vault - conf: 0.95  workflow.py:234
+                    INFO       10. Azure Container Registry -   workflow.py:234
+                             conf: 0.95                                        
+                    INFO       11. Azure Functions              workflow.py:234
+                             (Orchestrator Instance) - conf:                   
+                             0.95                                              
+                    INFO       12. App Service Plans            workflow.py:234
+                             (Orchestrator Instance) - conf:                   
+                             0.95                                              
+                    INFO       13. Azure Synapse Analytics      workflow.py:234
+                             (Synapse Spark pools) - conf: 0.9                 
+                    INFO     ---------------------------------- workflow.py:235
+                             --------------------------                        
+                                                                               
+  Γ£ô Resource Classification completed
+
+Γû╢ Stage 4/6: Network Topology
+  -> Stage 4: Analyzing network flows and connections...
+  -> Stage 4: 0 network flows, 0 VNet boundaries detected
+  -> Inferred 8 additional flows from patterns
+  Γ£ô Network Topology completed
+
+Γû╢ Stage 5/6: Security Requirements
+  -> Stage 5: Generating security recommendations...
+[01/02/26 13:05:43] INFO     SecurityAgent: Analyzing 13  security_agent.py:127
+                             resources with 8 flows                            
+                    INFO     SecurityAgent: Processing    security_agent.py:137
+                             batch 1 (10 resources)                            
+                    ERROR    Security analysis failed: '\n      workflow.py:938
+                             "recommendations"'                                
+  -> Error: '\n  "recommendations"'
+  -> Stage 5: 0 security recommendations generated
+  Γ£ô Security Requirements completed
+
+Γû╢ Stage 6/6: Build Requirements
+  -> Stage 6: Building final analysis...
+  Γ£ô Build Requirements completed
+Γ£ô Full analysis: output\architecture_analysis.json
+Γ£ô Resource summary: output\resource_summary.json
+Γ£ô RBAC assignments: output\rbac_assignments.json
+Γ£ô Private endpoints: output\private_endpoints.json
+Γ£ô Network flows: output\network_flows.json
+
+============================================================
+ANALYSIS COMPLETE
+============================================================
+
+Detection Summary:
+  ΓÇó Total resources detected: 13
+  ΓÇó Network flows identified: 8
+  ΓÇó VNet boundaries found: 0
+
+Resources by Type:
+  2x Azure Synapse Analytics
+     Azure Data Factory
+     Azure Machine Learning Workspace
+     Azure API Management
+     Azure AI Search
+     Azure OpenAI Service
+     Azure Event Hub
+     Azure Storage Account
+     Azure Key Vault
+     Azure Container Registry
+     Azure Functions
+     App Service Plans
+
+Output Files:
+  ΓÇó output\architecture_analysis.json
+  ΓÇó output\resource_summary.json
+  ΓÇó output\rbac_assignments.json
+  ΓÇó output\private_endpoints.json
+  ΓÇó output\network_flows.json
+
+============================================================
+Γ£ô Analysis completed in 233.6s

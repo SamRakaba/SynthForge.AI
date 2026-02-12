@@ -1,0 +1,334 @@
+"""
+Prompts module for SynthForge.AI.
+
+Loads and provides access to agent instructions from YAML configuration.
+All prompts and response schemas are defined in agent_instructions.yaml.
+"""
+
+import yaml
+import json
+from pathlib import Path
+from functools import lru_cache
+from typing import Any, Optional
+
+
+def get_instructions_path() -> Path:
+    """Get the path to the agent instructions YAML file."""
+    return Path(__file__).parent / "agent_instructions.yaml"
+
+
+@lru_cache()
+def load_instructions() -> dict[str, Any]:
+    """Load agent instructions from YAML file."""
+    path = get_instructions_path()
+    if not path.exists():
+        raise FileNotFoundError(f"Agent instructions not found at {path}")
+    
+    with open(path, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
+
+
+def get_agent_config(agent_name: str) -> dict[str, Any]:
+    """Get configuration for a specific agent."""
+    instructions = load_instructions()
+    if agent_name not in instructions:
+        raise KeyError(f"Agent '{agent_name}' not found in instructions")
+    return instructions[agent_name]
+
+
+def get_agent_instructions(agent_name: str) -> str:
+    """Get the instructions string for a specific agent."""
+    config = get_agent_config(agent_name)
+    return config.get("instructions", "")
+
+
+def get_agent_name(agent_name: str) -> str:
+    """Get the display name for a specific agent."""
+    config = get_agent_config(agent_name)
+    return config.get("name", agent_name)
+
+
+def get_agent_description(agent_name: str) -> str:
+    """Get the description for a specific agent."""
+    config = get_agent_config(agent_name)
+    return config.get("description", "")
+
+
+def get_response_schema(schema_name: str) -> dict[str, Any]:
+    """
+    Get a response schema by name.
+    
+    Args:
+        schema_name: One of 'security_recommendations', 'network_flows',
+                    'vision_detection', 'filter_decisions', 'clarification_response'
+    
+    Returns:
+        JSON schema dictionary
+    """
+    instructions = load_instructions()
+    schemas = instructions.get("response_schemas", {})
+    if schema_name not in schemas:
+        raise KeyError(f"Response schema '{schema_name}' not found")
+    return schemas[schema_name]
+
+
+def get_response_schema_json(schema_name: str) -> str:
+    """Get a response schema as formatted JSON string for prompts."""
+    schema = get_response_schema(schema_name)
+    return json.dumps(schema, indent=2)
+
+
+def get_user_prompt_template(agent_name: str) -> str:
+    """
+    Get the user prompt template for a specific agent.
+    
+    Args:
+        agent_name: The agent name (e.g., 'filter_agent', 'security_agent')
+    
+    Returns:
+        User prompt template string with placeholders like {resources_json}
+    """
+    config = get_agent_config(agent_name)
+    return config.get("user_prompt_template", "")
+
+
+# Convenience functions for each agent type
+def get_vision_agent_instructions() -> str:
+    """Get Vision Agent instructions."""
+    return get_agent_instructions("vision_agent")
+
+
+def get_filter_agent_instructions() -> str:
+    """Get Filter Agent instructions."""
+    return get_agent_instructions("filter_agent")
+
+
+def get_security_agent_instructions() -> str:
+    """Get Security Agent instructions."""
+    return get_agent_instructions("security_agent")
+
+
+def get_interactive_agent_instructions() -> str:
+    """Get Interactive Agent instructions."""
+    return get_agent_instructions("interactive_agent")
+
+
+def get_network_flow_agent_instructions() -> str:
+    """Get Network Flow Agent instructions."""
+    return get_agent_instructions("network_flow_agent")
+
+
+def get_service_normalizer_instructions() -> str:
+    """Get Service Normalizer instructions."""
+    return get_agent_instructions("service_normalizer")
+
+
+def get_arm_type_resolver_instructions() -> str:
+    """Get ARM Type Resolver instructions."""
+    return get_agent_instructions("arm_type_resolver")
+
+
+def get_ocr_detection_agent_instructions() -> str:
+    """Get OCR Detection Agent instructions."""
+    return get_agent_instructions("ocr_detection_agent")
+
+
+def get_detection_merger_agent_instructions() -> str:
+    """Get Detection Merger Agent instructions."""
+    return get_agent_instructions("detection_merger_agent")
+
+
+def get_service_analysis_agent_instructions() -> str:
+    """Get Service Analysis Agent (Phase 2) instructions."""
+    return get_iac_agent_instructions("service_analysis_agent")
+
+
+def get_module_mapping_agent_instructions() -> str:
+    """Get Module Mapping Agent (Phase 2) instructions."""
+    return get_iac_agent_instructions("module_mapping_agent")
+
+
+def get_module_development_agent_instructions(iac_format: str = "terraform") -> str:
+    """Get Module Development Agent (Phase 2) instructions for specified IaC format.
+    
+    Args:
+        iac_format: Either "terraform" or "bicep"
+        
+    Returns:
+        Agent instructions appropriate for the IaC format
+    """
+    instructions_data = load_iac_instructions()
+    agent_config = instructions_data.get("module_development_agent", {})
+    
+    if iac_format.lower() == "bicep":
+        return agent_config.get("bicep_instructions", "")
+    else:
+        return agent_config.get("terraform_instructions", "")
+
+
+
+
+def _format_devops_patterns(patterns: dict[str, Any], iac_format: str) -> str:
+    """Format DevOps patterns into instructional text."""
+    lines = [
+        "\n# DevOps Best Practices for Deployment Wrapper",
+        "# Apply these industry-standard patterns for production-grade infrastructure\n"
+    ]
+    
+    # File organization
+    if "file_organization" in patterns:
+        lines.append("## File Organization")
+        org = patterns["file_organization"]
+        lines.append(org.get("description", ""))
+        lines.append("\n### Generate these files based on detected services:")
+        
+        for file_info in org.get("required_files", []):
+            lines.append(f"\n**{file_info['name']}**: {file_info['purpose']}")
+            if "applies_when" in file_info:
+                lines.append(f"  - Generate when: {file_info['applies_when']}")
+    
+    # Multiple naming modules
+    if "multiple_naming_modules" in patterns:
+        lines.append("\n\n## Multiple Naming Modules Pattern")
+        naming = patterns["multiple_naming_modules"]
+        lines.append(naming.get("pattern", ""))
+        
+        example_key = f"{iac_format.lower()}_example"
+        if example_key in naming:
+            lines.append(f"\n### Example ({iac_format}):")
+            lines.append("```" + iac_format.lower())
+            lines.append(naming[example_key].strip())
+            lines.append("```")
+    
+    # Configuration objects
+    if "configuration_objects" in patterns:
+        lines.append("\n\n## Configuration Objects")
+        config_obj = patterns["configuration_objects"]
+        
+        if iac_format.lower() == "terraform":
+            lines.append(config_obj.get("terraform_pattern", ""))
+            if "terraform_example" in config_obj:
+                lines.append("\n### Example:")
+                lines.append("```terraform")
+                lines.append(config_obj["terraform_example"].strip())
+                lines.append("```")
+        else:
+            if "bicep_example" in config_obj:
+                lines.append("\n### Example:")
+                lines.append("```bicep")
+                lines.append(config_obj["bicep_example"].strip())
+                lines.append("```")
+    
+    # Module composition
+    if "module_composition" in patterns:
+        lines.append("\n\n## Module Composition")
+        comp = patterns["module_composition"]
+        lines.append(comp.get("pattern", ""))
+        
+        example_key = f"{iac_format.lower()}_example"
+        if example_key in comp:
+            lines.append(f"\n### Example ({iac_format}):")
+            lines.append("```" + iac_format.lower())
+            lines.append(comp[example_key].strip())
+            lines.append("```")
+    
+    # Key principles
+    if "key_principles" in patterns:
+        lines.append("\n\n## Key Principles to Follow")
+        for principle in patterns["key_principles"]:
+            lines.append(f"- {principle}")
+    
+    return "\n".join(lines)
+def get_deployment_wrapper_agent_instructions(iac_format: str = "terraform") -> str:
+    """Get Deployment Wrapper Agent (Phase 2 - Stage 5) instructions for specified IaC format.
+    
+    Args:
+        iac_format: Either "terraform" or "bicep"
+        
+    Returns:
+        Agent instructions appropriate for the IaC format
+    """
+    instructions_data = load_iac_instructions()
+    agent_config = instructions_data.get("deployment_wrapper_agent", {})
+    
+    if iac_format.lower() == "bicep":
+        return agent_config.get("bicep_instructions", "")
+    else:
+        return agent_config.get("terraform_instructions", "")
+
+
+# =============================================================================
+# IaC Agent Instruction Loaders (Phase 2)
+# =============================================================================
+
+@lru_cache()
+def load_iac_instructions() -> dict[str, Any]:
+    """Load IaC agent instructions from YAML file (Phase 2)."""
+    yaml_path = Path(__file__).parent / "iac_agent_instructions.yaml"
+    with open(yaml_path, encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def get_iac_agent_instructions(agent_name: str) -> str:
+    """Get instructions for a specific IaC agent (Phase 2).
+    
+    Args:
+        agent_name: Name of the IaC agent (e.g., 'service_analysis_agent')
+        
+    Returns:
+        Agent instructions as a string
+    """
+    instructions_data = load_iac_instructions()
+    if agent_name not in instructions_data:
+        raise ValueError(
+            f"Agent '{agent_name}' not found in iac_agent_instructions.yaml. "
+            f"Available agents: {', '.join(instructions_data.keys())}"
+        )
+    return instructions_data[agent_name]["instructions"]
+
+
+def get_prompt_template(template_name: str) -> str:
+    """Get a prompt template by name from iac_agent_instructions.yaml.
+    
+    Args:
+        template_name: Name of the template (e.g., 'module_mapping_single_service')
+        
+    Returns:
+        Prompt template string with placeholders for .format()
+    """
+    instructions_data = load_iac_instructions()
+    templates = instructions_data.get("prompt_templates", {})
+    if template_name not in templates:
+        raise ValueError(
+            f"Prompt template '{template_name}' not found. "
+            f"Available templates: {', '.join(templates.keys())}"
+        )
+    return templates[template_name]
+
+
+__all__ = [
+    "load_instructions",
+    "get_agent_config",
+    "get_agent_instructions",
+    "get_agent_name",
+    "get_agent_description",
+    "get_response_schema",
+    "get_response_schema_json",
+    "get_user_prompt_template",
+    "get_vision_agent_instructions",
+    "get_filter_agent_instructions",
+    "get_security_agent_instructions",
+    "get_interactive_agent_instructions",
+    "get_network_flow_agent_instructions",
+    "get_service_normalizer_instructions",
+    "get_arm_type_resolver_instructions",
+    "get_ocr_detection_agent_instructions",
+    "get_detection_merger_agent_instructions",
+    "get_service_analysis_agent_instructions",
+    "get_module_mapping_agent_instructions",
+    "get_module_development_agent_instructions",
+    "get_deployment_wrapper_agent_instructions",
+    "get_iac_agent_instructions",
+    "load_iac_instructions",
+    "get_prompt_template",
+]

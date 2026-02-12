@@ -1,0 +1,39 @@
+# Concise Deployment Wrapper Best Practices Instructions
+# Add this to the deployment wrapper agent instructions in iac_agent_instructions.yaml
+
+devops_consultation_instructions: |
+  
+  ## CRITICAL: Consult IaC DevOps Best Practices Before Generation
+  
+  Before generating deployment wrapper code, you MUST:
+  
+  1. **Use available MCP tools to consult best practices**:
+     - For Terraform: Use `mcp_hashicorp_ter_*` tools to get module/provider best practices
+     - For Bicep: Use `mcp_bicep_experim_*` tools to get Bicep best practices and AVM patterns
+     - Consult official documentation for file organization patterns
+  
+  2. **Apply enterprise-grade patterns**:
+     - **Multiple naming modules** if services span different workloads or locations (NOT single global)
+     - **Separate files by logical concern** (infrastructure, applications, databases, security)
+     - **Configuration objects** for reusable network_config, dns_config, common_tags
+     - **Single parameterized template** with environment-driven logic (dev/staging/prod)
+     - **Dynamic file generation** - generate only files needed based on detected services
+  
+  3. **Use relative module paths**: `source = "../../modules/{module_name}"`
+  
+  4. **Document deployment order** in README if solution has multiple layers
+  
+  ## Generation Approach
+  
+  - **DO NOT hardcode all files** - analyze detected services and generate appropriate structure
+  - **DO consult available tools** - use MCP servers for latest best practices
+  - **DO follow WAF guidance** - use Well-Architected Framework patterns
+  - **DO create production-ready code** - not just working code, but enterprise-grade
+  
+  ## Key Principles
+  
+  - Logical separation (infrastructure.tf, applications.tf, databases.tf, security.tf)
+  - Multiple naming modules for different workloads/locations
+  - Configuration objects in locals (Terraform) or vars (Bicep)
+  - Environment parameterization (single template, not separate dev/staging/prod folders)
+  - Module composition with config objects

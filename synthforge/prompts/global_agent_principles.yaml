@@ -1,0 +1,292 @@
+# =============================================================================
+# SynthForge.AI - Global Shared Principles
+# =============================================================================
+# Shared guidance referenced by all agent instruction files.
+# This file is included via `includes` in agent_instructions.yaml,
+# iac_agent_instructions.yaml, and code_quality_agent.yaml.
+
+# =============================================================================
+# COMMON AGENT PRINCIPLES (ALL AGENTS MUST FOLLOW)
+# =============================================================================
+
+common_principles:
+  description: "Universal rules for all agents to maintain consistency"
+  
+  core_rules:
+    - rule: "NO STATIC DEFINITIONS"
+      guidance: "Never hardcode service names, ARM types, or resource properties"
+      implementation: "Use tools (Bing, MS Learn MCP) for all lookups and validations"
+      
+    - rule: "DYNAMIC LOOKUPS REQUIRED"
+      guidance: "All naming conventions, constraints, and properties must come from documentation"
+      implementation: "Research using tools, cite documentation URLs in all outputs"
+      
+    - rule: "CITE ALL SOURCES"
+      guidance: "Every recommendation must reference its documentation source"
+      implementation: "Include documentation URLs in output for traceability"
+      
+    - rule: "AGENT AUTONOMY"
+      guidance: "Agents decide which tools to use based on their specific task"
+      implementation: "See 'Tool Selection Strategy' section for guidance"
+      
+    - rule: "THOROUGH VALIDATION"
+      guidance: "Validate all detections/lookups against official Azure documentation"
+      implementation: "Use multiple tools to cross-reference when uncertain"
+  
+  output_standards:
+    - "All outputs must be valid JSON matching the agent's schema"
+    - "Include reasoning/justification for decisions made"
+    - "Preserve all unique information - don't lose data during processing"
+    - "Document merge/transformation decisions for traceability"
+  
+  error_handling:
+    - "Mark uncertain items for clarification rather than guessing"
+    - "If primary tool fails, try alternative tools before giving up"
+    - "Provide confidence levels when uncertain about detections"
+    - "Include 'needs_clarification' field for ambiguous cases"
+
+# =============================================================================
+# MCP SERVER & TOOL INTEGRATION GUIDE
+# =============================================================================
+
+mcp_tools_guide:
+  description: "Guide for agents to select and use appropriate tools"
+  
+  # Bing Grounding Tool (Available in Azure AI Foundry)
+  bing_grounding:
+    purpose: "Search web for current Azure documentation and best practices"
+    when_to_use:
+      - "Looking up service-specific documentation"
+      - "Finding current security best practices"
+      - "Getting naming conventions from Azure Well-Architected Framework"
+      - "Finding RBAC role names and IDs"
+      - "Looking up private endpoint configurations"
+      - "Finding subnet delegation requirements"
+    query_patterns:
+      - "Azure [service] security best practices"
+      - "Azure [service] RBAC built-in roles"
+      - "Azure [service] private endpoint subresource groupId"
+      - "Azure [service] private DNS zone"
+      - "Azure [service] naming conventions"
+      - "Azure [service] resource name rules"
+      - "Azure [service] VNet integration"
+      - "Azure [service] subnet delegation"
+    output_handling:
+      - "Extract specific values from search results"
+      - "Cite documentation URLs in recommendations"
+      - "Cross-reference multiple sources when uncertain"
+  
+  # Remote MCP Servers (OPTIONAL - For enhanced documentation)
+  remote_mcp_servers:
+    status: "Optional for all phases - Bing Grounding is primary"
+    note: "MCP servers provide deeper documentation access when needed"
+    
+    microsoft_learn_mcp:
+      purpose: "Official Microsoft Learn documentation and code samples"
+      url: "https://learn.microsoft.com/api/mcp"
+      repository: "https://github.com/microsoftdocs/mcp"
+      authentication: "None required (public server)"
+      tools:
+        microsoft_docs_search:
+          description: "Semantic search across Microsoft Learn documentation"
+          parameters: "query (string), top (number, default 5)"
+          example: "Search for 'Azure Functions networking configuration'"
+        microsoft_docs_fetch:
+          description: "Fetch full content of a specific Microsoft Learn document"
+          parameters: "url (string - learn.microsoft.com URL)"
+          example: "Get complete content of specific doc page"
+        microsoft_code_sample_search:
+          description: "Search code samples with language filter"
+          parameters: "query (string), language (optional)"
+          example: "Find Python code samples for Azure Storage"
+      when_to_use:
+        - "Need detailed ARM resource schemas"
+        - "Looking for specific code examples with language filter"
+        - "Fetching complete documentation page content"
+        - "ARM API version lookups"
+      configuration: "Set MS_LEARN_MCP_URL=https://learn.microsoft.com/api/mcp"
+    
+    github_mcp:
+      purpose: "Access Azure Verified Modules, Bicep templates, architecture samples"
+      when_to_use:
+        - "Finding Bicep module examples"
+        - "Searching Azure quickstart templates"
+        - "Looking up Well-Architected patterns"
+      repositories:
+        - "Azure/bicep-registry-modules"
+        - "Azure/azure-quickstart-templates"
+        - "Azure/Well-Architected-Framework"
+      configuration: "Set GITHUB_MCP_URL in .env if needed"
+    
+    hashicorp_mcp:
+      purpose: "Access Terraform provider documentation and module registry"
+      when_to_use:
+        - "Generating Terraform instead of Bicep"
+        - "Looking up azurerm provider resources"
+        - "Finding Terraform module examples"
+      resources:
+        - "azurerm provider documentation"
+        - "Terraform Registry modules"
+      configuration: "Set TERRAFORM_MCP_URL in .env if generating Terraform"
+  
+  # GitHub MCP Server
+  github_mcp:
+    purpose: "Search Azure Verified Modules, sample architectures, and Bicep templates"
+    when_to_use:
+      - "Finding Bicep module examples"
+      - "Looking up Azure Verified Module (AVM) patterns"
+      - "Finding reference architectures"
+      - "Getting IaC code samples"
+      - "Looking up Azure Well-Architected Framework guidance"
+    repositories:
+      - "Azure/bicep-registry-modules"
+      - "Azure/azure-quickstart-templates"
+      - "Azure/Enterprise-Scale"
+      - "Azure/ALZ-Bicep"
+      - "Azure/Well-Architected-Framework"
+    query_patterns:
+      - "Bicep module [resource type]"
+      - "Azure Verified Module [service]"
+      - "Terraform module [service]"
+      - "Well-Architected [pillar] checklist"
+  
+  # HashiCorp MCP Server (Terraform)
+  hashicorp_mcp:
+    purpose: "Terraform module lookups, HCL best practices, provider documentation"
+    when_to_use:
+      - "Generating Terraform code instead of Bicep"
+      - "Looking up Terraform provider documentation"
+      - "Finding Terraform module patterns"
+      - "Getting HashiCorp best practices for Azure"
+    resources:
+      - "Azure Provider documentation"
+      - "Terraform Registry modules"
+      - "HashiCorp Learn tutorials"
+    query_patterns:
+      - "azurerm_[resource] terraform"
+      - "Terraform Azure [service] module"
+  
+  # Azure Documentation MCP
+  azure_docs_mcp:
+    purpose: "Official Microsoft Learn documentation for authoritative information"
+    when_to_use:
+      - "Getting official naming rules"
+      - "Finding Well-Architected Framework guidance"
+      - "Looking up security baselines"
+      - "Getting architectural decision records"
+    search_patterns:
+      # DO NOT hardcode URLs - use these search patterns to find current documentation
+      - "site:learn.microsoft.com Azure Well-Architected Framework"
+      - "site:learn.microsoft.com Azure Architecture Center"
+      - "site:learn.microsoft.com Azure security best practices"
+      - "site:learn.microsoft.com Azure resource naming rules"
+      - "site:learn.microsoft.com Azure private endpoint DNS"
+      - "site:learn.microsoft.com Azure RBAC built-in roles"
+    note: "Always search for current URLs - documentation structure may change"
+
+  # Tool Selection Strategy
+  tool_selection:
+    description: "How agents should choose which tool to use"
+    phase1_agents:
+      description: "Description, Vision, and OCR agents"
+      primary_tool: "bing_grounding"
+      reason: "Provides all Phase 1 needs without MCP complexity"
+      capabilities:
+        - "Azure service documentation lookup"
+        - "CAF naming conventions"
+        - "Security best practices"
+        - "RBAC role information"
+        - "Private endpoint configurations"
+        - "Subnet delegation requirements"
+      query_pattern: "Azure [service] [topic] site:learn.microsoft.com"
+    rules:
+      - priority: 1
+        condition: "Need current best practices or documentation (Phase 1)"
+        tool: "bing_grounding"
+        reason: "Most up-to-date information from web search, no MCP configuration needed"
+        examples:
+          - "Search for Azure Well-Architected guidance"
+          - "Find security baseline documentation"
+          - "Lookup RBAC role names"
+          - "Find CAF naming conventions"
+          - "Look up private endpoint DNS zones"
+      - priority: 2
+        condition: "Need official documentation or ARM schemas (Phase 2)"
+        tool: "ms_learn_mcp OR bing_grounding"
+        reason: "Official Microsoft Learn content with structured access"
+        examples:
+          - "Search for ARM resource type documentation"
+          - "Find code samples with language filter"
+          - "Get API version information"
+      - priority: 3
+        condition: "Need IaC examples or modules"
+        tool: "github_mcp"
+        reason: "Azure Verified Modules and sample code"
+      - priority: 4
+        condition: "Need Terraform-specific info"
+        tool: "hashicorp_mcp"
+        reason: "Terraform provider and module documentation"
+    fallback: "If primary tool fails, try alternative tools in priority order"
+    best_practices:
+      - "Use Bing Grounding for current best practices and security guidance"
+      - "Use MS Learn MCP for official documentation and ARM schemas"
+      - "Combine multiple tools for comprehensive answers"
+      - "Cite sources from tool responses in recommendations"
+
+# =============================================================================
+# COMMON IaC PRINCIPLES (ALL IaC AGENTS MUST FOLLOW)
+# =============================================================================
+
+common_iac_principles:
+  description: "Universal rules for all IaC generation agents"
+  
+  core_rules:
+    - rule: "NO STATIC DEFINITIONS"
+      guidance: "Never hardcode service configurations, module patterns, or resource properties"
+      implementation: "Use Bing Grounding and MS Learn MCP for all lookups"
+      
+    - rule: "RESEARCH-BASED RECOMMENDATIONS"  
+      guidance: "All recommendations must cite specific Azure controls, WAF pillars, or security benchmarks"
+      implementation: "Include documentation URLs (learn.microsoft.com) in all outputs"
+      
+    - rule: "DYNAMIC PATTERN PROCESSING"
+      guidance: "Process ANY pattern type without code changes - fully extensible"
+      implementation: "Use generic algorithms (For EACH pattern...) not hardcoded IF statements"
+      
+    - rule: "AVM FOR REFERENCE ONLY"
+      guidance: "Use Azure Verified Modules to learn patterns, NOT as source"
+      implementation: "Generate native resources, reference AVM documentation"
+      
+    - rule: "GROUNDED JUSTIFICATIONS"
+      guidance: "Every module/resource must have researched justification"
+      implementation: "Cite Azure Security Benchmark controls, WAF pillars, service docs"
+  
+  output_standards:
+    - "Complete JSON only - NO '...' abbreviations or truncation"
+    - "Include best_practice_url for every recommendation"
+    - "Document sources in best_practices_sources objects"
+    - "Service-specific guidance - NO generic recommendations"
+  
+  module_generation:
+    - "Generate native resources (not sourced from modules)"
+    - "One module per resource type (cognitive-services-account, not openai-account)"
+    - "Lowercase kebab-case naming (storage-account, key-vault)"
+    - "Common modules determined dynamically from common_patterns threshold (agent-detected, not hardcoded)"
+    - "FLAT STRUCTURE: All modules in modules/ at same level (no modules/common/ subfolder)"
+    - "Service modules: modules/storage-account/, modules/key-vault/, modules/cognitive-services-account/"
+    - "Common modules: Derived from Service Analysis Agent's common_patterns output (e.g., network-privateendpoints if private_endpoint pattern detected with usage_count>=2)"
+    - "Module references use relative paths based on detected patterns: source = \"../[pattern-folder-path]\""
+  
+  code_quality_rules:
+    terraform:
+      - "ALWAYS use explicit boolean comparisons (== true, != null, not just variable name)"
+      - "ALWAYS use try() or lookup() for nested object/map access"
+      - "ALWAYS check dynamic blocks handle empty iteration (length(keys()) > 0)"
+      - "ALWAYS verify module source paths exist"
+      - "Use proper ternary operator precedence with parentheses"
+      - "Test conditionals with edge cases (null, empty lists/maps)"
+    bicep:
+      - "Use ? null-conditional operator for safe property access"
+      - "Use empty() function to check for empty arrays/objects"
+      - "Add @description decorators to all parameters"
+      - "Use existing keyword for referenced resources"

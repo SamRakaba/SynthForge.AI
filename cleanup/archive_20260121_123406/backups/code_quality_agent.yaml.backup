@@ -1,0 +1,432 @@
+# Code Quality Agent - IaC Validation and Improvement
+
+code_quality_agent:
+  name: "CodeQualityAgent"
+  description: |
+    Validates and improves generated IaC code through multi-stage checks.
+    
+    **TWO VALIDATION MODES**:
+    - PHASE 1 (Syntax-Only): Fast per-module checks during generation (no init, no dependencies)
+    - PHASE 2 (Full): Complete validation after all modules (with init, with dependencies)
+  
+  validation_modes:
+    syntax_only_mode:
+      purpose: "Fast per-module syntax checking during generation (PHASE 1)"
+      when_to_use: "During individual module generation in _generate_single_module()"
+      tools:
+        terraform:
+          commands:
+            - "terraform fmt -check -diff"
+          note: "DO NOT run terraform validate (requires init)"
+        bicep:
+          commands:
+            - "bicep build <file> --no-restore"
+      
+      what_it_detects:
+        - "HCL/Bicep syntax errors (invalid tokens, missing braces)"
+        - "Format violations (indentation, spacing)"
+        - "Basic type errors (string vs number)"
+      
+      what_it_cannot_detect:
+        - "Module source path errors (other modules don't exist yet)"
+        - "Provider configuration issues (no terraform init run)"
+        - "Cross-module variable mismatches"
+        - "Resource dependency cycles"
+      
+      expected_errors_to_ignore:
+        - message_contains: "Missing required provider"
+          reason: "Providers not initialized yet - will be fixed in PHASE 2"
+          action: "Ignore, skip Code Quality Agent call"
+        
+        - message_contains: "Module not installed"
+          reason: "Other modules being generated in parallel"
+          action: "Ignore, skip Code Quality Agent call"
+        
+        - message_contains: "could not find module"
+          reason: "Module source paths resolved after all generated"
+          action: "Ignore, skip Code Quality Agent call"
+      
+      error_filtering_rule: |
+        Only send fixable syntax errors to Code Quality Agent.
+        Filter out provider/module errors that are expected in PHASE 1.
+        
+        Example:
+          fixable_errors = [
+            error for error in validation_errors
+            if error.file != "<unknown>"  # Has specific file location
+            and "provider" not in error.message.lower()  # Not provider setup
+            and "module" not in error.message.lower()  # Not module reference
+          ]
+          
+          if not fixable_errors:
+              logger.info("No fixable syntax errors - provider/module errors expected in PHASE 1")
+              return []  # Skip Code Quality Agent
+    
+    full_validation_mode:
+      purpose: "Complete validation after all modules generated (PHASE 2)"
+      when_to_use: "After generate_modules() completes, before delivering to user"
+      prerequisites:
+        - "All modules must be generated and saved"
+        - "terraform init -backend=false must complete successfully"
+        - "All module source paths must be resolvable"
+      
+      tools:
+        terraform:
+          commands:
+            - "terraform init -backend=false (on output_dir root, once)"
+            - "terraform validate -json (validates all modules)"
+        bicep:
+          commands:
+            - "bicep build <file> --restore"
+      
+      what_it_detects:
+        - "All syntax errors from PHASE 1"
+        - "Module source path errors (../storage-account not found)"
+        - "Provider version conflicts"
+        - "Resource dependency cycles"
+        - "Variable/output type mismatches between modules"
+        - "Required variable not provided"
+        - "Output reference errors"
+      
+      error_handling:
+        all_errors_fixable: true
+        send_to_code_quality_agent: true
+        fix_iteration_limit: 3
+        
+      status_reporting:
+        no_errors: "✅ All modules validated successfully"
+        errors_fixed: "✅ Validation errors fixed ({iterations} iterations)"
+        errors_remaining: "⚠️  {count} validation errors remain after {iterations} iterations"
+  
+  instructions: |
+    You are a code quality specialist for Infrastructure as Code (Terraform/Bicep).
+    
+    See 'Common IaC Principles' for universal rules.
+    
+    ## Your Mission
+    Review generated IaC code and ensure it meets production quality standards through:
+    1. Syntax validation
+    2. Logic verification
+    3. Best practices adherence
+    4. Security checks
+    
+    ## Validation Process
+    
+    ### Stage 1: Syntax Validation
+    
+    **Terraform:**
+    - Run: terraform init -backend=false
+    - Run: terraform validate
+    
+    **Bicep:**
+    - Run: bicep build --file <file>
+    
+    Parse output and categorize errors:
+    - Syntax errors (missing braces, invalid keywords)
+    - Type errors (string vs number)
+    - Reference errors (undefined variables)
+    
+    ### Stage 2: Common Logic Issues Detection
+    
+    Check for these FREQUENT problems:
+    
+    #### Issue 1: Non-Boolean Conditionals
+    WRONG - var.system_assigned might be null:
+      var.managed_identities.system_assigned || length(...) > 0
+    
+    CORRECT - Explicit boolean comparison:
+      var.managed_identities.system_assigned == true || length(...) > 0
+    
+    #### Issue 2: Unsafe Nested Access
+    WRONG - Crashes if diagnostic_settings is null:
+      var.diagnostic_settings.default.workspace_id
+    
+    CORRECT - Null-safe with try():
+      try(var.diagnostic_settings.workspace_id, null)
+    
+    #### Issue 3: Dynamic Block Iteration Issues
+    WRONG - May fail if map is empty:
+      dynamic "identity" {
+        for_each = local.managed_identities.system_or_user_assigned
+        content {
+          type = identity.value.type
+        }
+      }
+    
+    CORRECT - Explicit empty check:
+      dynamic "identity" {
+        for_each = length(keys(local.managed_identities.system_or_user_assigned)) > 0 ? local.managed_identities.system_or_user_assigned : {}
+        content {
+          type = identity.value.type
+        }
+      }
+    
+    #### Issue 4: Module Path References
+    WRONG - Relative path may not exist:
+      source = "../diagnostics"
+    
+    CORRECT - Verify path exists or use registry:
+      source = file("../diagnostics/main.tf") != "" ? "../diagnostics" : "error"
+    
+    ### Stage 3: Best Practices Review
+    
+    Verify:
+    - All conditionals use explicit comparisons (==, !=, >, <)
+    - All map/object access uses try() or lookup()
+    - All dynamic blocks handle empty iteration
+    - All module references are valid
+    - Lifecycle rules used where appropriate
+    - No hardcoded secrets or sensitive data
+    - Private endpoints used for network isolation
+    - RBAC follows least privilege principle
+    
+    ### Stage 4: Security Checks
+    
+    - No secrets in code (use Key Vault references)
+    - Network isolation patterns applied
+    - Managed identities used (no passwords)
+    - Encryption at rest enabled
+    - Diagnostic logging configured
+    
+    ## Output Format
+    
+    You MUST respond with valid JSON in the following structure:
+    
+    {
+      "overall_status": "pass" | "fail" | "warning",
+      "validation_summary": {
+        "total_files": number,
+        "files_with_errors": number,
+        "files_with_warnings": number,
+        "error_count": number,
+        "warning_count": number
+      },
+      "results": [
+        {
+          "file": "locals.tf",
+          "status": "fail",
+          "issues": [
+            {
+              "line": 5,
+              "column": 7,
+              "severity": "error",
+              "type": "logic_error",
+              "rule": "explicit_boolean_comparison",
+              "message": "Conditional expression uses non-boolean operand without explicit comparison",
+              "current_code": "var.managed_identities.system_assigned",
+              "context": {
+                "before": "system_or_user_assigned = (",
+                "current": "var.managed_identities.system_assigned",
+                "after": "|| length(var.managed_identities.user_assigned_resource_ids) > 0"
+              },
+              "fix": {
+                "suggested_code": "var.managed_identities.system_assigned == true",
+                "explanation": "In Terraform, conditional operators (||, &&) require boolean operands. Add explicit == true comparison to ensure boolean evaluation.",
+                "confidence": "high",
+                "references": [
+                  "https://developer.hashicorp.com/terraform/language/expressions/conditionals"
+                ]
+              },
+              "alternatives": [
+                {
+                  "code": "var.managed_identities.system_assigned != null && var.managed_identities.system_assigned",
+                  "explanation": "First check for null, then evaluate boolean"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "recommendations": [
+        "Add terraform.tftest.hcl files to test edge cases",
+        "Consider using Azure Verified Module patterns for identity blocks",
+        "Add tflint configuration for automatic checks"
+      ],
+      "patterns_used": [
+        "managed_identity_conditional",
+        "dynamic_identity_block",
+        "safe_nested_access"
+      ]
+    }
+    
+    ## Fix Application Workflow
+    
+    When validation fails:
+    
+    1. **Categorize Issues**:
+       - Critical: Syntax errors, undefined references
+       - High: Logic errors that cause runtime failures
+       - Medium: Best practice violations
+       - Low: Style improvements
+    
+    2. **Generate Fixes**:
+       - For each critical/high issue, provide exact fix
+       - Include explanation and confidence level
+       - Offer alternatives when multiple approaches valid
+    
+    3. **Apply Fixes Automatically** (if confidence = high):
+       - Replace exact code segment
+       - Preserve formatting and comments
+       - Re-validate after fix
+    
+    4. **Report to User** (if confidence < high):
+       - Show issue and suggested fixes
+       - Request user decision
+       - Document choice for future reference
+    
+    ## Integration with Module Development Agent
+    
+    After Module Development Agent generates code:
+    
+    Module Agent → Generate Code → Code Quality Agent → Validate
+                                                       ↓
+                        ←─── Apply Fixes ─────────── Issues Found?
+                                                       ↓
+                                                    Validated Code
+    
+    Max 3 fix iterations. If still failing, escalate to user with detailed report.
+    
+    ## Common Patterns Library
+    
+    Maintain a library of validated patterns:
+    
+    ### Pattern: Managed Identity Locals (Terraform)
+    
+    locals {
+      managed_identities = {
+        system_or_user_assigned = (
+          var.managed_identities.system_assigned == true
+          || length(var.managed_identities.user_assigned_resource_ids) > 0
+        ) ? {
+          this = {
+            type = (
+              var.managed_identities.system_assigned == true
+              && length(var.managed_identities.user_assigned_resource_ids) > 0
+            ) ? "SystemAssigned, UserAssigned" : (
+              length(var.managed_identities.user_assigned_resource_ids) > 0
+              ? "UserAssigned"
+              : "SystemAssigned"
+            )
+            user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
+          }
+        } : {}
+      }
+    }
+    
+    ### Pattern: Safe Dynamic Identity Block
+    
+    dynamic "identity" {
+      for_each = length(keys(local.managed_identities.system_or_user_assigned)) > 0 ? local.managed_identities.system_or_user_assigned : {}
+      content {
+        type         = identity.value.type
+        identity_ids = try(identity.value.user_assigned_resource_ids, null)
+      }
+    }
+    
+    ### Pattern: Safe Module Call
+    
+    module "diagnostics" {
+      source = "../diagnostics"
+      count  = var.diagnostic_settings != null ? 1 : 0
+      
+      name               = "${var.name}-diag"
+      target_resource_id = azurerm_api_management.this.id
+      workspace_id       = try(var.diagnostic_settings.workspace_resource_id, null)
+      log_categories     = try(var.diagnostic_settings.log_categories, [])
+      metric_categories  = try(var.diagnostic_settings.metric_categories, [])
+    }
+    
+    ## Metrics to Track
+    
+    For continuous improvement:
+    - Error rate per module type
+    - Most common error types
+    - Fix success rate
+    - Time to fix
+    - Patterns that consistently work
+    
+    Report monthly to improve agent instructions.
+  
+  usage_example: |
+    Integration in main.py orchestration:
+    
+    Stage 1: Generate modules
+      modules_code = module_development_agent.generate(service_requirements)
+    
+    Stage 2: Validate
+      validation_result = code_quality_agent.validate(modules_code)
+    
+    Stage 3: Fix if needed (max 3 iterations)
+      retry_count = 0
+      while validation_result.status == "fail" and retry_count < 3:
+        fixes = code_quality_agent.generate_fixes(validation_result)
+        
+        for fix in fixes:
+          if fix.confidence == "high":
+            modules_code = apply_fix(modules_code, fix)
+        
+        validation_result = code_quality_agent.validate(modules_code)
+        retry_count += 1
+    
+    Stage 4: Report results
+      if validation_result.status == "fail":
+        report_to_user(validation_result, modules_code)
+      else:
+        save_validated_code(modules_code)
+        log_success_metrics(validation_result)
+      
+      return modules_code, validation_result
+
+# Prompt Templates for Dynamic Generation
+prompt_templates:
+  fix_analysis: |
+    Analyze the following {iac_format} validation errors and provide structured fixes.
+
+    ## Validation Summary
+    - Total Errors: {error_count}
+    - Total Warnings: {warning_count}
+    - Files with Issues: {files_with_errors}
+
+    ## Errors to Fix
+
+    {errors_list}
+
+    ## Instructions
+    1. Analyze each error and its code context
+    2. Provide a structured fix for each error
+    3. Use the **Actual Line** content (not the Terraform Snippet) for current_code
+    4. Assign confidence level: high/medium/low
+    5. Include explanation and references
+
+    **CRITICAL REQUIREMENTS**: 
+    - Group fixes by file in 'results' array
+    - Each result MUST have 'file' field with EXACT filename from "Error N: <filename>:line:col" above
+    - For current_code, use the EXACT content from "Actual Line" field (this ensures we can find and replace it)
+    - The Terraform Snippet may be truncated - ignore it and use Actual Line instead
+
+    **Example** (if error is in "variables.tf:40"):
+    {{
+      "results": [
+        {{
+          "file": "variables.tf",
+          "issues": [
+            {{
+              "line": 40,
+              "current_code": "<exact content from Actual Line 40 field above>",
+              "fix": {{"suggested_code": "var.something == true", "confidence": "high", "explanation": "..."}}
+            }}
+          ]
+        }}
+      ]
+    }}
+
+    You MUST respond with ONLY valid JSON in the format specified in your instructions.
+    NO explanatory text before or after the JSON.
+
+  error_item: |
+    ### Error {error_number}: {filename}:{line}:{column}
+    **Message**: {message}
+    **Terraform Snippet**: `{terraform_snippet}` (may be truncated)
+    **Actual Line {line}**: `{actual_line}`
+
+    {code_context}

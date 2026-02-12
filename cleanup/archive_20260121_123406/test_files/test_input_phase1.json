@@ -1,0 +1,70 @@
+{
+  "architecture_overview": {
+    "solution_name": "Azure OpenAI Secure Deployment",
+    "description": "GPT-4o deployment with enterprise security controls",
+    "deployment_model": "hub-spoke",
+    "compliance_requirements": [
+      "Azure Security Baseline",
+      "Well-Architected Framework"
+    ]
+  },
+  "service_requirements": [
+    {
+      "service_name": "Azure OpenAI Service",
+      "arm_type": "Microsoft.CognitiveServices/accounts",
+      "kind": "OpenAI",
+      "sku": "Standard",
+      "deployment_models": [
+        "gpt-4o"
+      ],
+      "security_requirements": {
+        "aad_authentication": {
+          "required": true,
+          "configuration_property": "disable_local_auth",
+          "recommended_value": true
+        },
+        "network_isolation": {
+          "private_endpoint_required": true,
+          "public_network_access_enabled": false,
+          "service_endpoints_required": false
+        },
+        "encryption": {
+          "encryption_at_rest": true,
+          "infrastructure_encryption_enabled": true,
+          "customer_managed_key_required": false
+        }
+      },
+      "monitoring_requirements": {
+        "diagnostic_settings_required": true,
+        "log_categories": [
+          "Audit",
+          "RequestResponse",
+          "Trace"
+        ],
+        "metric_categories": [
+          "AllMetrics"
+        ]
+      }
+    }
+  ],
+  "common_patterns": {
+    "private_endpoint": {
+      "required": true,
+      "count": 1,
+      "arm_type": "Microsoft.Network/privateEndpoints",
+      "justification": "Azure Security Baseline NS-2"
+    },
+    "diagnostics": {
+      "required": true,
+      "count": 1,
+      "arm_type": "Microsoft.Insights/diagnosticSettings",
+      "justification": "WAF Operational Excellence"
+    },
+    "rbac": {
+      "required": true,
+      "count": 1,
+      "arm_type": "Microsoft.Authorization/roleAssignments",
+      "justification": "Managed identity authentication"
+    }
+  }
+}
