@@ -15,7 +15,8 @@ labenv/
 .env.local
 
 # IDE
-.vscode/
+# Note: .vscode/ is included in version control to share GitHub Copilot MCP configuration
+# See docs/GITHUB_COPILOT_CONFIGURATION.md for details
 .idea/
 *.swp
 *.swo

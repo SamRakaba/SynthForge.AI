@@ -1,0 +1,68 @@
+{
+  // GitHub Copilot Configuration for SynthForge.AI
+  // See docs/GITHUB_COPILOT_CONFIGURATION.md for details
+  
+  "github.copilot.advanced": {
+    // Use GPT-4 for better Azure architecture understanding
+    "model": "gpt-4"
+  },
+  
+  "github.copilot.editor.enableAutoCompletions": true,
+  
+  "github.copilot.mcp.servers": {
+    // Microsoft Learn MCP - Required for Azure documentation
+    "mslearn": {
+      "url": "https://mcp.ai.azure.com",
+      "description": "Microsoft Learn - Azure documentation, ARM schemas, and code samples",
+      "enabled": true
+    },
+    
+    // Bicep MCP - For IaC generation (Phase 2)
+    // Requires: npx -y @microsoft/mcp-server-bicep
+    "bicep": {
+      "url": "http://localhost:3101",
+      "description": "Bicep MCP - Azure Verified Modules, resource schemas, and best practices",
+      "enabled": true,
+      "command": "npx",
+      "args": ["-y", "@microsoft/mcp-server-bicep"]
+    },
+    
+    // Terraform MCP - For Terraform IaC generation (Phase 2)
+    // Requires: Docker or local installation
+    "terraform": {
+      "url": "http://localhost:3102",
+      "description": "Terraform MCP - HashiCorp Registry, provider docs, and modules",
+      "enabled": false,
+      "command": "docker",
+      "args": ["run", "-p", "3102:3102", "hashicorp/terraform-mcp-server"]
+    },
+    
+    // GitHub MCP - For GitHub Actions and workflow templates
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp",
+      "description": "GitHub Actions workflows and marketplace actions",
+      "enabled": true
+    }
+  },
+  
+  // Python-specific settings for SynthForge.AI
+  "python.analysis.typeCheckingMode": "basic",
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  
+  // File associations
+  "files.associations": {
+    "*.yaml": "yaml",
+    "*.bicep": "bicep",
+    "*.tf": "terraform"
+  },
+  
+  // Copilot chat settings
+  "github.copilot.chat.welcomeMessage": "first",
+  
+  // Editor settings
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  }
+}

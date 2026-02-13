@@ -1,0 +1,34 @@
+{
+  // Recommended VS Code extensions for SynthForge.AI development
+  "recommendations": [
+    // GitHub Copilot
+    "github.copilot",
+    "github.copilot-chat",
+    
+    // Python development
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.black-formatter",
+    
+    // Azure tools
+    "ms-azuretools.vscode-azureresourcegroups",
+    "ms-azuretools.vscode-azurefunctions",
+    "ms-azuretools.vscode-bicep",
+    "ms-azuretools.vscode-azure-mcp-server",
+    
+    // IaC tools
+    "hashicorp.terraform",
+    
+    // YAML support
+    "redhat.vscode-yaml",
+    
+    // Markdown support
+    "yzhang.markdown-all-in-one",
+    
+    // Docker (for MCP servers)
+    "ms-azuretools.vscode-docker",
+    
+    // Git
+    "eamodio.gitlens"
+  ]
+}

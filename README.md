@@ -57,6 +57,25 @@ BING_CONNECTION_ID=/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.
 - Outbound HTTPS access to Bing API (if Bing grounding enabled)
 - Outbound HTTPS access to `learn.microsoft.com/api/mcp` (Microsoft Learn MCP server)
 
+## GitHub Copilot Configuration (Optional)
+
+For developers using GitHub Copilot, we've created a comprehensive configuration guide to help you get the most out of AI-assisted development:
+
+📖 **[GitHub Copilot Configuration Guide](docs/GITHUB_COPILOT_CONFIGURATION.md)**
+
+Learn how to:
+- **Configure AI models** (GPT-4, GPT-3.5, Claude) for optimal code assistance
+- **Add MCP servers** to give Copilot access to Azure documentation and tools
+- **Understand configuration scope** (global vs. repository-specific settings)
+
+**Quick Start:** This repository includes pre-configured MCP servers in `.vscode/settings.json` for:
+- Microsoft Learn (Azure docs)
+- Bicep MCP (Azure Verified Modules)
+- Terraform MCP (HashiCorp Registry)
+- GitHub Actions templates
+
+See the guide for setup instructions and troubleshooting.
+
 ## Key Principles
 
 - **Foundry Agentic Pattern**: All agents use `azure.ai.agents.AgentsClient` from Microsoft Agent Framework
