@@ -174,8 +174,8 @@ vision_agent:
     - Resource Group boxes/labels → The CONTAINER is not a resource
     - VNet labels (e.g., "10.0.0.0/16") → The LABEL is not a service
     - Subnet labels → Network segmentation labels are not resources
-    - **CRITICAL**: Icons INSIDE resource groups ARE resources - DETECT THEM ALL!
-    - **CRITICAL**: Services inside VNets/subnets ARE resources - DETECT THEM ALL!
+    - **[SEVERITY: MEDIUM]** Icons INSIDE resource groups ARE resources - DETECT THEM ALL!
+    - **[SEVERITY: MEDIUM]** Services inside VNets/subnets ARE resources - DETECT THEM ALL!
     - Look INSIDE every boundary box for service icons
     
     ### Validation Before Output
@@ -2520,7 +2520,7 @@ network_flow_agent:
 
     ## ARROW DETECTION FOR RBAC
     
-    **CRITICAL**: Arrow direction indicates data access patterns needed for RBAC!
+    **[SEVERITY: HIGH]** Arrow direction indicates data access patterns needed for RBAC!
     
     For each arrow detected, capture:
     - **Arrow pointing TO a resource** = That resource is a DATA TARGET

@@ -269,7 +269,7 @@ service_analysis_agent:
     # Analysis Workflow
 
     ## Stage 1: Extract ALL Services from Phase 1 with Intelligent Classification
-    **CRITICAL**: Start by extracting EVERY service from resource_summary.json and classify each one.
+    **[SEVERITY: HIGH]** Start by extracting EVERY service from resource_summary.json and classify each one.
 
     1. Load resource_summary.json - get complete service list (look at "resources" array)
     2. For EACH service in the resources array:
@@ -325,7 +325,7 @@ service_analysis_agent:
     - If counts don't match, you missed services - go back and classify ALL
 
     ## Stage 2: Analyze Common Resource Patterns
-    **CRITICAL**: Identify which COMMON patterns are used across resources:
+    **[SEVERITY: HIGH]** Identify which COMMON patterns are used across resources:
 
     1. **Private Endpoint Pattern Analysis**:
        - Count how many services require private_endpoint: true
@@ -361,7 +361,7 @@ service_analysis_agent:
        - IF 2+ services need monitoring → Flag "monitoring" as common module needed
        - Extract: alert rule requirements
 
-    **CRITICAL**: Analyze ALL Phase 1 recommendations to detect patterns dynamically.
+    **[SEVERITY: HIGH]** Analyze ALL Phase 1 recommendations to detect patterns dynamically.
     DO NOT hardcode pattern detection - discover patterns from actual service requirements.
 
     **OUTPUT**: Add a "common_patterns" section to your JSON with ONLY patterns detected from analysis:
@@ -468,9 +468,9 @@ service_analysis_agent:
        - RBAC roles from "rbac_roles" field
 
     **NO FILTERING**: If resource_summary.json has 12 services, you must extract all 12
-    **CRITICAL**: The arm_type field is MANDATORY - every service MUST have it populated
+    **[SEVERITY: BLOCKING]** The arm_type field is MANDATORY - every service MUST have it populated
 
-    ### Best Practice Research (CRITICAL - Multi-Source Evaluation)
+    ### Best Practice Research ([SEVERITY: HIGH] - Multi-Source Evaluation)
     For EACH service, research from ALL authoritative sources and synthesize best recommendations:
 
     #### 1. Well-Architected Framework (WAF) - PRIMARY SOURCE
@@ -768,14 +768,13 @@ service_analysis_agent:
 
     ## arm_type (string) **REQUIRED**
     - ARM resource type from Phase 1 (e.g., "Microsoft.CognitiveServices/accounts")
-    - **CRITICAL**: Copy this EXACTLY from the Phase 1 resource_summary.json
+    - **[SEVERITY: BLOCKING]** Copy this EXACTLY from the Phase 1 resource_summary.json
     - This field is REQUIRED for module generation - do NOT omit it
-    - Example: "Microsoft.DataFactory/factories"\
-        , "Microsoft.Web/sites", "Microsoft.KeyVault/vaults"
+    - Example: "Microsoft.DataFactory/factories", "Microsoft.Web/sites", "Microsoft.KeyVault/vaults"
 
     ## resource_category (string) **REQUIRED**
     - Azure service category from Phase 1 (e.g., "Compute", "Networking", "Storage", "Databases", "AI + Machine Learning")
-    - **CRITICAL**: Copy this EXACTLY from the Phase 1 resource_summary.json
+    - **[SEVERITY: BLOCKING]** Copy this EXACTLY from the Phase 1 resource_summary.json
     - This field comes from Azure's official service classification - do NOT make up categories
     - Used for organizing modules and documentation generation
 
@@ -982,7 +981,7 @@ module_mapping_agent:
 
     ### Step 2: Research Service-Specific Best Practices
     \
-        **CRITICAL**: For EVERY service, research from multiple authoritative sources:
+        **[SEVERITY: HIGH]** For EVERY service, research from multiple authoritative sources:
 
     #### Well-Architected Framework (Primary Authority)
     - Query: "Azure {service} Well-Architected Framework site:learn.microsoft.com"
@@ -1239,7 +1238,7 @@ module_development_agent:
         - Networking: `azurerm_subnet`, `azurerm_network_security_group`
     - Identity: Usually built into main resource, but may need `azurerm_user_assigned_identity`
 
-    **CRITICAL**: Generate COMPREHENSIVE modules with ALL resources needed for production
+    **[SEVERITY: HIGH]** Generate COMPREHENSIVE modules with ALL resources needed for production
 
     ## 3. STAGE 4 SCOPE: REUSABLE MODULES ONLY (Native Resources)
     ```
@@ -1576,7 +1575,7 @@ module_development_agent:
     - Pattern: Main resource → Dynamic blocks for optionals → Additional resources → Lifecycle rules
 
     ### Step 5A: Generate COMMON Resource Modules FIRST (Dependencies)
-    **CRITICAL**: Before generating service-specific modules, generate common modules that will be called.
+    **[SEVERITY: HIGH]** Before generating service-specific modules, generate common modules that will be called.
 
     **INPUT**: You will receive a "\
         common_modules" array from Step 3 (Module Mapping Agent) output.
@@ -5367,7 +5366,7 @@ deployment_wrapper_agent:
     ## Response Format
 
 
-    **CRITICAL**: Return ONLY valid JSON in this exact structure. No text before or after.
+    **[SEVERITY: BLOCKING]** Return ONLY valid JSON in this exact structure. No text before or after.
 
 
     ```json
