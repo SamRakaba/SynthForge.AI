@@ -131,6 +131,11 @@ Model Context Protocol (MCP) servers provide GitHub Copilot with access to exter
 - Search Terraform Registry
 - Look up GitHub Actions and Azure DevOps pipelines
 
+> **Important:** MCP server URLs in this guide are based on SynthForge.AI's project configuration. Some endpoints may be examples, pre-release, or require verification. Always check official documentation:
+> - **Microsoft MCP:** https://learn.microsoft.com/azure/ai-foundry/mcp/get-started
+> - **GitHub Copilot:** https://docs.github.com/en/copilot/mcp
+> - **MCP Specification:** https://modelcontextprotocol.io
+
 ### Configuration Location
 
 MCP servers are configured in **GitHub Copilot settings**, which can be:
@@ -180,6 +185,10 @@ gh copilot mcp status
 2. Search for: `github.copilot.mcp.servers`
 3. Click `Edit in settings.json`
 4. Add server configuration:
+
+> **Note:** The URLs below are based on SynthForge.AI's project configuration. Some URLs (like Microsoft Foundry MCP and GitHub MCP) may be examples or pre-release endpoints. Verify URLs with official documentation before use. For production use, confirm availability with:
+> - Microsoft Azure AI Foundry documentation: https://learn.microsoft.com/azure/ai-foundry/mcp
+> - GitHub Copilot documentation: https://docs.github.com/en/copilot
 
 ```json
 {
@@ -435,6 +444,12 @@ When both global and workspace settings exist:
 #### 1. Create Workspace Settings
 
 Create `.vscode/settings.json` in the repository root:
+
+> **Important:** The MCP server URLs below are based on SynthForge.AI's configuration. Before use:
+> - Verify Microsoft Foundry MCP URL with Azure AI Foundry documentation
+> - Confirm GitHub MCP endpoint availability 
+> - Test local MCP servers (Bicep, Terraform) work on your system
+> - See [References](#references) section for official documentation links
 
 ```json
 {

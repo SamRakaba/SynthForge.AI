@@ -1,6 +1,12 @@
 {
   // GitHub Copilot Configuration for SynthForge.AI
   // See docs/GITHUB_COPILOT_CONFIGURATION.md for details
+  //
+  // IMPORTANT: MCP server URLs below are based on SynthForge.AI project configuration.
+  // Some URLs (Microsoft Foundry MCP, GitHub MCP) may be examples or pre-release endpoints.
+  // Verify with official documentation before use:
+  // - Microsoft: https://learn.microsoft.com/azure/ai-foundry/mcp
+  // - GitHub: https://docs.github.com/en/copilot
   
   "github.copilot.advanced": {
     // Use GPT-4 for better Azure architecture understanding
