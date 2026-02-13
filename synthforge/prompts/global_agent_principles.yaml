@@ -99,23 +99,41 @@ requirement_severity:
     - "When in doubt, start with MEDIUM and adjust based on impact"
   
   migration_from_critical:
-    note: "Previous 'CRITICAL' markers should be categorized using this framework"
-    mapping:
-      - old: "**CRITICAL**: Return ONLY valid JSON"
-        new_severity: "BLOCKING"
-        reason: "Output parsing fails without valid JSON"
+    note: "Guide for categorizing previous 'CRITICAL' markers using the new framework"
+    general_guidelines:
+      - "If violation breaks output parsing or causes data loss → BLOCKING"
+      - "If violation impacts security, accuracy, or data integrity → HIGH"
+      - "If violation affects best practices or completeness → MEDIUM"
+      - "If violation only affects style or minor quality → LOW"
+    
+    common_patterns:
+      output_format_requirements:
+        - text: "Return ONLY valid JSON"
+        - text: "No text before or after JSON"
+        - text: "Match exact schema structure"
+        - severity: "BLOCKING"
+        - reason: "Output parsing fails without valid JSON"
         
-      - old: "**CRITICAL**: Copy arm_type EXACTLY from input"
-        new_severity: "BLOCKING"
-        reason: "Data loss breaks pipeline integrity"
+      data_preservation:
+        - text: "Copy [field] EXACTLY from input"
+        - text: "Preserve all unique information"
+        - text: "Do not lose data during processing"
+        - severity: "BLOCKING"
+        - reason: "Data loss breaks pipeline integrity"
         
-      - old: "**CRITICAL**: Use Azure Verified Modules patterns"
-        new_severity: "HIGH"
-        reason: "Critical for quality, but doesn't break pipeline"
+      dynamic_lookups:
+        - text: "Use dynamic lookups, not static lists"
+        - text: "Research from authoritative sources"
+        - text: "Never hardcode definitions"
+        - severity: "HIGH"
+        - reason: "Critical for accuracy, but doesn't break pipeline"
         
-      - old: "**CRITICAL**: Detect all resources in diagram"
-        new_severity: "MEDIUM"
-        reason: "Important for completeness, but partial detection still useful"
+      completeness:
+        - text: "Detect ALL resources"
+        - text: "Extract EVERY service"
+        - text: "Analyze ALL recommendations"
+        - severity: "MEDIUM"
+        - reason: "Important for completeness, but partial detection still useful"
 
 # =============================================================================
 # MCP SERVER & TOOL INTEGRATION GUIDE
