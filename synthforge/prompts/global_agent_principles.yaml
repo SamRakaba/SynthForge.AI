@@ -46,6 +46,78 @@ common_principles:
     - "Include 'needs_clarification' field for ambiguous cases"
 
 # =============================================================================
+# REQUIREMENT SEVERITY FRAMEWORK
+# =============================================================================
+# Use this consistent severity system instead of marking everything as "CRITICAL".
+# This helps agents prioritize requirements and understand consequences of violations.
+
+requirement_severity:
+  description: "Standardized severity levels for all agent requirements"
+  
+  severity_levels:
+    BLOCKING:
+      description: "Requirement must be met or agent output will be rejected/invalid"
+      consequences: "Output parsing fails, pipeline stops, or data corruption occurs"
+      examples:
+        - "Return ONLY valid JSON matching the exact schema"
+        - "Preserve all arm_type fields from input exactly"
+        - "Never modify or lose data from resource_summary.json"
+        - "All outputs must match specified schema structure"
+      
+    HIGH:
+      description: "Critical for production quality, but violations may be fixable"
+      consequences: "Reduced accuracy, security risks, or requires manual fixes"
+      examples:
+        - "Use dynamic lookups, not static lists"
+        - "Generate native resources, not module sources"
+        - "Cite documentation sources for all recommendations"
+        - "Research patterns from Azure Verified Modules"
+        - "All boolean conditionals must use explicit comparisons (== true, != null)"
+      
+    MEDIUM:
+      description: "Important for best practices and user experience"
+      consequences: "Sub-optimal output, but functional"
+      examples:
+        - "Detect all resources inside VNets and resource groups"
+        - "Include confidence levels for uncertain detections"
+        - "Use kebab-case for module names"
+        - "Add descriptions to all parameters"
+      
+    LOW:
+      description: "Nice to have, improves quality but not essential"
+      consequences: "Minor quality impact"
+      examples:
+        - "Follow consistent formatting conventions"
+        - "Add helpful comments in generated code"
+        - "Optimize query patterns for tool selection"
+  
+  usage_guidelines:
+    - "Use BLOCKING only for requirements that cause immediate failures"
+    - "Reserve HIGH for security, accuracy, and data integrity requirements"
+    - "Use MEDIUM for best practices that significantly improve quality"
+    - "Use LOW for style and minor optimization suggestions"
+    - "When in doubt, start with MEDIUM and adjust based on impact"
+  
+  migration_from_critical:
+    note: "Previous 'CRITICAL' markers should be categorized using this framework"
+    mapping:
+      - old: "**CRITICAL**: Return ONLY valid JSON"
+        new_severity: "BLOCKING"
+        reason: "Output parsing fails without valid JSON"
+        
+      - old: "**CRITICAL**: Copy arm_type EXACTLY from input"
+        new_severity: "BLOCKING"
+        reason: "Data loss breaks pipeline integrity"
+        
+      - old: "**CRITICAL**: Use Azure Verified Modules patterns"
+        new_severity: "HIGH"
+        reason: "Critical for quality, but doesn't break pipeline"
+        
+      - old: "**CRITICAL**: Detect all resources in diagram"
+        new_severity: "MEDIUM"
+        reason: "Important for completeness, but partial detection still useful"
+
+# =============================================================================
 # MCP SERVER & TOOL INTEGRATION GUIDE
 # =============================================================================
 
@@ -232,6 +304,73 @@ mcp_tools_guide:
       - "Use MS Learn MCP for official documentation and ARM schemas"
       - "Combine multiple tools for comprehensive answers"
       - "Cite sources from tool responses in recommendations"
+  
+  # Tool Failure Handling & Retry Strategies
+  failure_handling:
+    description: "Structured approach to handle tool failures and edge cases"
+    
+    tool_timeout_or_failure:
+      severity: "MEDIUM"
+      immediate_actions:
+        - action: "Retry with simplified query"
+          example: 
+            original: "Azure Functions premium plan networking configuration best practices"
+            simplified: "Azure Functions networking"
+          max_retries: 2
+          
+        - action: "Try alternative query pattern"
+          example:
+            original: "Azure [service] [specific feature]"
+            alternative: "[specific feature] in Azure [service]"
+          
+        - action: "Fall back to alternative tool"
+          priority_order:
+            - "bing_grounding (primary for most queries)"
+            - "ms_learn_mcp (for official docs)"
+            - "github_mcp (for code examples)"
+      
+      if_all_tools_fail:
+        - "Mark requirement as 'needs_clarification'"
+        - "Document attempted queries and failures"
+        - "Continue with remaining requirements"
+        - "Do NOT fabricate or guess information"
+    
+    empty_or_irrelevant_results:
+      severity: "MEDIUM"
+      actions:
+        - action: "Refine query with more specific terms"
+          example:
+            vague: "Azure storage security"
+            specific: "Azure Storage Account private endpoint configuration"
+            
+        - action: "Break complex queries into simpler parts"
+          example:
+            complex: "Azure API Management VNet integration with private endpoints and DNS"
+            parts:
+              - "Azure API Management VNet integration"
+              - "Azure API Management private endpoint"
+              - "Azure private endpoint DNS zones"
+              
+        - action: "Try searching for related concepts"
+          example: "If 'subnet delegation' returns nothing, try 'service endpoints' or 'VNet integration'"
+    
+    conflicting_information:
+      severity: "HIGH"
+      actions:
+        - "Prioritize learn.microsoft.com sources over third-party"
+        - "Check documentation dates - use most recent"
+        - "Cross-reference with multiple authoritative sources"
+        - "Document conflicting sources and reasoning for choice"
+        - "Mark as 'needs_verification' if uncertainty remains"
+    
+    parsing_or_extraction_errors:
+      severity: "BLOCKING"
+      actions:
+        - "Log exact error and input that caused it"
+        - "Attempt graceful degradation (extract partial data)"
+        - "Mark affected items with 'parsing_error' flag"
+        - "Continue processing remaining items"
+        - "Report all parsing errors in output metadata"
 
 # =============================================================================
 # COMMON IaC PRINCIPLES (ALL IaC AGENTS MUST FOLLOW)
