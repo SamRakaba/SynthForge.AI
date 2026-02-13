@@ -672,13 +672,13 @@ export AZURE_TOKEN=your-token-here
 ### SynthForge.AI Specific
 
 - **Related Documentation:**
-  - [MCP Server Integration Guide](../cleanup/archive_20260121_123406/analysis_docs/MCP_SERVER_GUIDE.md) - SynthForge.AI agent MCP servers
-  - [.env.example](../.env.example) - Environment configuration for SynthForge.AI agents
+  - [.env.example](../.env.example) - Environment configuration for SynthForge.AI agents with MCP server setup
   - [README.md](../README.md) - Project overview and setup
+  - [Phase 2 Prerequisites](PHASE2_PREREQUISITES.md) - Additional MCP server information for IaC generation
 
 - **Key Differences:**
   - This guide covers **GitHub Copilot** (your IDE assistant)
-  - MCP_SERVER_GUIDE.md covers **SynthForge.AI agents** (the application)
+  - .env.example covers **SynthForge.AI agents** (the application)
   - Both can use MCP servers, but configurations are separate
 
 ### Community Resources
