@@ -30,6 +30,200 @@ includes:
 # AGENT-SPECIFIC INSTRUCTIONS
 # =============================================================================
 # These principles apply to ALL agents unless explicitly overridden in agent-specific sections.
+
+common_principles:
+  description: "Universal rules for all agents to maintain consistency"
+  
+  core_rules:
+    - rule: "NO STATIC DEFINITIONS"
+      guidance: "Never hardcode service names, ARM types, or resource properties"
+      implementation: "Use tools (Bing, MS Learn MCP) for all lookups and validations"
+      
+    - rule: "DYNAMIC LOOKUPS REQUIRED"
+      guidance: "All naming conventions, constraints, and properties must come from documentation"
+      implementation: "Research using tools, (Bing, MS Learn MCP, HashiCorp , GitHub , Azure well architected framework) cite documentation URLs in all outputs"
+      
+    - rule: "CITE ALL SOURCES"
+      guidance: "Every recommendation must reference its documentation source"
+      implementation: "Include documentation URLs in output for traceability"
+      
+    - rule: "AGENT AUTONOMY"
+      guidance: "Agents decide which tools to use based on their specific task"
+      implementation: "See 'Tool Selection Strategy' section for guidance"
+      
+    - rule: "THOROUGH VALIDATION"
+      guidance: "Validate all detections/lookups against official Azure documentation"
+      implementation: "Use multiple tools to cross-reference when uncertain"
+  
+  output_standards:
+    - "All outputs must be valid JSON matching the agent's schema"
+    - "Include reasoning/justification for decisions made"
+    - "Preserve all unique information - don't lose data during processing"
+    - "Document merge/transformation decisions for traceability"
+  
+  error_handling:
+    - "Mark uncertain items for clarification rather than guessing"
+    - "If primary tool fails, try alternative tools before giving up"
+    - "Provide confidence levels when uncertain about detections"
+    - "Include 'needs_clarification' field for ambiguous cases"
+
+# =============================================================================
+# MCP SERVER & TOOL INTEGRATION GUIDE
+# =============================================================================
+# This section defines how agents should use external tools and MCP servers.
+# Agents should dynamically choose the best tool based on their task.
+
+mcp_tools_guide:
+  description: "Guide for agents to select and use appropriate tools"
+  
+  # Bing Grounding Tool (Available in Azure AI Foundry)
+  bing_grounding:
+    purpose: "Search web for current Azure documentation and best practices"
+    when_to_use:
+      - "Looking up service-specific documentation"
+      - "Finding current security best practices"
+      - "Getting naming conventions from Azure Well-Architected Framework"
+      - "Finding RBAC role names and IDs"
+      - "Looking up private endpoint configurations"
+      - "Finding subnet delegation requirements"
+    query_patterns:
+      - "Azure [service] security best practices"
+      - "Azure [service] RBAC built-in roles"
+      - "Azure [service] private endpoint subresource groupId"
+      - "Azure [service] private DNS zone"
+      - "Azure [service] naming conventions"
+      - "Azure [service] resource name rules"
+      - "Azure [service] VNet integration"
+      - "Azure [service] subnet delegation"
+    output_handling:
+      - "Extract specific values from search results"
+      - "Cite documentation URLs in recommendations"
+      - "Cross-reference multiple sources when uncertain"
+  
+  # Microsoft Learn MCP Server
+  ms_learn_mcp:
+    purpose: "Search Microsoft Learn documentation, code samples, and ARM schema information"
+    priority: "HIGH - Use for official documentation and ARM schemas"
+    when_to_use:
+      - "Getting ARM resource type schemas"
+      - "Searching official Microsoft documentation"
+      - "Finding code samples with language filter"
+      - "Looking up Azure service configurations"
+      - "Finding API versions and resource properties"
+      - "Validating ARM resource type names"
+    tools:
+      microsoft_docs_search:
+        description: "Semantic search across Microsoft Learn documentation"
+        example: "Search for Azure Functions networking documentation"
+        use_case: "When you need to find official documentation"
+      microsoft_docs_fetch:
+        description: "Fetch full content of a specific Microsoft Learn document"
+        example: "Get full content of a specific documentation URL"
+        use_case: "When you need complete documentation content"
+      microsoft_code_sample_search:
+        description: "Search code samples with language filter"
+        example: "Find Python code samples for Azure Storage"
+        use_case: "When you need code examples in a specific language"
+    advantages:
+      - "Direct access to authoritative Microsoft documentation"
+      - "Structured content with semantic search"
+      - "Code samples filtered by programming language"
+      - "Always up-to-date with official content"
+    integration_notes:
+      - "Real cloud-hosted MCP server at https://learn.microsoft.com/api/mcp"
+      - "No authentication required"
+      - "Automatically available in all agents via ToolSet"
+  
+  # GitHub MCP Server
+  github_mcp:
+    purpose: "Search Azure Verified Modules, sample architectures, and Bicep templates"
+    when_to_use:
+      - "Finding Bicep module examples"
+      - "Looking up Azure Verified Module (AVM) patterns"
+      - "Finding reference architectures"
+      - "Getting IaC code samples"
+      - "Looking up Azure Well-Architected Framework guidance"
+    repositories:
+      - "Azure/bicep-registry-modules"
+      - "Azure/azure-quickstart-templates"
+      - "Azure/Enterprise-Scale"
+      - "Azure/ALZ-Bicep"
+      - "Azure/Well-Architected-Framework"
+    query_patterns:
+      - "Bicep module [resource type]"
+      - "Azure Verified Module [service]"
+      - "Terraform module [service]"
+      - "Well-Architected [pillar] checklist"
+  
+  # HashiCorp MCP Server (Terraform)
+  hashicorp_mcp:
+    purpose: "Terraform module lookups, HCL best practices, provider documentation"
+    when_to_use:
+      - "Generating Terraform code instead of Bicep"
+      - "Looking up Terraform provider documentation"
+      - "Finding Terraform module patterns"
+      - "Getting HashiCorp best practices for Azure"
+    resources:
+      - "Azure Provider documentation"
+      - "Terraform Registry modules"
+      - "HashiCorp Learn tutorials"
+    query_patterns:
+      - "azurerm_[resource] terraform"
+      - "Terraform Azure [service] module"
+  
+  # Azure Documentation MCP
+  azure_docs_mcp:
+    purpose: "Official Microsoft Learn documentation for authoritative information"
+    when_to_use:
+      - "Getting official naming rules"
+      - "Finding Well-Architected Framework guidance"
+      - "Looking up security baselines"
+      - "Getting architectural decision records"
+    search_patterns:
+      # DO NOT hardcode URLs - use these search patterns to find current documentation
+      - "site:learn.microsoft.com Azure Well-Architected Framework"
+      - "site:learn.microsoft.com Azure Architecture Center"
+      - "site:learn.microsoft.com Azure security best practices"
+      - "site:learn.microsoft.com Azure resource naming rules"
+      - "site:learn.microsoft.com Azure private endpoint DNS"
+      - "site:learn.microsoft.com Azure RBAC built-in roles"
+    note: "Always search for current URLs - documentation structure may change"
+
+  # Tool Selection Strategy
+  tool_selection:
+    description: "How agents should choose which tool to use"
+    rules:
+      - priority: 1
+        condition: "Need current best practices or documentation"
+        tool: "bing_grounding"
+        reason: "Most up-to-date information from web search"
+        examples:
+          - "Search for Azure Well-Architected guidance"
+          - "Find security baseline documentation"
+          - "Lookup RBAC role names"
+      - priority: 2
+        condition: "Need official documentation or ARM schemas"
+        tool: "ms_learn_mcp"
+        reason: "Official Microsoft Learn content with structured access"
+        examples:
+          - "Search for ARM resource type documentation"
+          - "Find code samples with language filter"
+          - "Get API version information"
+      - priority: 3
+        condition: "Need IaC examples or modules"
+        tool: "github_mcp"
+        reason: "Azure Verified Modules and sample code"
+      - priority: 4
+        condition: "Need Terraform-specific info"
+        tool: "hashicorp_mcp"
+        reason: "Terraform provider and module documentation"
+    fallback: "If primary tool fails, try alternative tools in priority order"
+    best_practices:
+      - "Use Bing Grounding for current best practices and security guidance"
+      - "Use MS Learn MCP for official documentation and ARM schemas"
+      - "Combine multiple tools for comprehensive answers"
+      - "Cite sources from tool responses in recommendations"
+
 # -----------------------------------------------------------------------------
 # VISION AGENT
 # -----------------------------------------------------------------------------
