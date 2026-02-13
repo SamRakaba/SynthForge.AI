@@ -76,6 +76,20 @@ Learn how to:
 
 See the guide for setup instructions and troubleshooting.
 
+### Code Generation Guidelines
+
+For contributors generating code, we provide comprehensive GitHub Copilot instructions:
+
+📝 **[Copilot Code Generation Instructions](.github/copilot-instructions.md)**
+
+These instructions ensure all generated code follows project patterns:
+- **Agent-First Architecture** - Use Microsoft Agent Framework patterns
+- **No Repetition** - DRY principle with shared utilities
+- **No Hardcoding** - Dynamic lookups via Bing/MCP tools
+- **Modular Design** - Single responsibility principle
+- **MCP Validation** - Verify server accessibility
+- **Type Safety** - Comprehensive type hints and validation
+
 ## Key Principles
 
 - **Foundry Agentic Pattern**: All agents use `azure.ai.agents.AgentsClient` from Microsoft Agent Framework
