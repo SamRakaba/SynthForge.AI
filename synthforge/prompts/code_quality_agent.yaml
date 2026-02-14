@@ -252,6 +252,80 @@ code_quality_agent:
       ]
     }
     
+    ## ❌ INVALID Output Examples (DO NOT DO THIS)
+    
+    **BLOCKING Violation - Not JSON only:**
+    ```
+    Here are the validation results:
+    {
+      "overall_status": "pass",
+      ...
+    }
+    ```
+    ❌ Problem: Text before JSON
+    
+    **BLOCKING Violation - Missing required fields:**
+    ```json
+    {
+      "overall_status": "pass",
+      "results": []
+    }
+    ```
+    ❌ Problem: Missing validation_summary, recommendations, patterns_used
+    
+    **BLOCKING Violation - Truncated output:**
+    ```json
+    {
+      "overall_status": "fail",
+      "validation_summary": {...},
+      "results": [
+        {
+          "file": "main.tf",
+          "issues": [...]
+        },
+        ...
+      ]
+    }
+    ```
+    ❌ Problem: "..." abbreviations instead of complete data
+    
+    **HIGH Violation - Generic recommendations:**
+    ```json
+    {
+      "recommendations": [
+        "Follow best practices",
+        "Fix the errors",
+        "Improve code quality"
+      ]
+    }
+    ```
+    ❌ Problem: Vague, non-actionable recommendations
+    
+    ## ✓ VALID Output Example
+    
+    ```json
+    {
+      "overall_status": "pass",
+      "validation_summary": {
+        "total_files": 3,
+        "files_with_errors": 0,
+        "files_with_warnings": 0,
+        "error_count": 0,
+        "warning_count": 0
+      },
+      "results": [],
+      "recommendations": [
+        "Add terraform.tftest.hcl to test managed identity edge cases (system_assigned=false, user_assigned_resource_ids=[])",
+        "Consider using try() for all nested object access to prevent null reference errors"
+      ],
+      "patterns_used": [
+        "safe_nested_access",
+        "explicit_boolean_comparison"
+      ]
+    }
+    ```
+    ✓ Complete JSON, all required fields, specific recommendations
+    
     ## Fix Application Workflow
     
     When validation fails:
